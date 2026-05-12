@@ -3,36 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject; // tambah ini
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject // tambah implements
 {
-    use HasApiTokens;
+    use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-    ];
+    protected $fillable = ['name', 'email', 'password', 'role'];
+    protected $hidden = ['password'];
+    protected $casts = ['password' => 'hashed'];
 
-    protected $hidden = [
-        'password',
-    ];
-
-    protected $casts = [
-        'password' => 'hashed',
-    ];
-
-    // Relasi ke data warga (opsional, satu user bisa terhubung ke satu data warga)
-    public function citizen()
+    // Wajib ada 2 method ini untuk JWT
+    public function getJWTIdentifier()
     {
-        return $this->hasOne(Citizen::class);
+        return $this->getKey();
     }
 
-    // Helper: cek apakah user adalah admin
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    public function citizen()
+    {
+        return $this->hasOne(Citizen::class);
     }
 }
